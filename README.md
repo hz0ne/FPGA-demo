@@ -4,13 +4,13 @@ FPGA acceleration demo repo,including PCI drivers, IO controler, user_base progr
 
 
 
-PCI驱动框架文档
+PCI驱动框架文档V1.0
+===
 V1.0
 
 
 
 Author：杜海鑫
-
 Date：2018.9.10
 
 
@@ -20,26 +20,15 @@ Date：2018.9.10
 
 
 概述
-
-
-
-
-
-
+-
 
 
 
 Linux 下驱动作为系统的模块，在内核的支持下可以灵活的组织，总线驱动为pci子系统提供了支持，在pci驱动编写时会更便捷和安全。
-
 Linux底层代码发展变化很快，此文档作为pci驱动框架，是一个摸索过程的文档，对编写驱动提供一个相对健全的方式，欢迎补充和提出问题
 
 
 内核版本4.15
-
-
-
-
-
 
 Github 仓库地址：https://github.com/dhxsy1994/OperationSys_rep
 
@@ -47,14 +36,20 @@ Github 仓库地址：https://github.com/dhxsy1994/OperationSys_rep
 PCI子系统作为计算机总线的一部分，有独立的寻址功能，能够去帮我们做很多工作，但PCI子系统的设备仍然需要我们的驱动去启动，PCI子系统用来管理PCI插槽上的设备，向内核请求管理的同时要注册pci和pci设备（字符设备，块设备，网络设备）
 
 
+***
 
-驱动基于内核
 
-一、内核模块
+
+# 驱动基于内核
+
+驱动是系统内核的一部分
+
+
+## 一、内核模块
 
 驱动作为Linux模块可以灵活的安装和卸载，如有需要可以对内核配置其跟随系统启动，或者手动安装和卸载模块，下面是内核模块的代码实现
 
-···
+```c
 #include <linux/kernel.h> /*Needed by all modules*/
 #include <linux/module.h> /*Needed for KERN_* */
 #include <linux/init.h> /* Needed for the macros */
@@ -78,25 +73,25 @@ static void hello_exit(void)
 /* main module function*/进入退出函数，关键
 module_init(hello_init);
 module_exit(hello_exit);
-···c
+```
 
 
 
 
-二、Makefile 编译
+## 二、Makefile 编译
 
-···c
+```c
 obj-m :=MOUDLE.o                           #产生模块的目标文件
                                                                                                                                                                 all:
 make -C /lib/modules/$(shell uname -r)/build SUBDIRS=$(PWD) modules    #编译模块
 clean:
 make -C /lib/modules/$(shell uname -r)/build SUBDIRS=$(PWD) clean      #清理
+```
 
 
 
 
-
-三、管理内核模块
+## 三、管理内核模块
 
 
 	$ lsmod 
@@ -110,9 +105,11 @@ make -C /lib/modules/$(shell uname -r)/build SUBDIRS=$(PWD) clean      #清理
 
 
 
-PCI信息查看
+# PCI信息
 
-一、PCI 设备查看
+相关pci设备的信息由系统默认提供
+
+## 一、PCI 设备查看
 
 	$ lspci
 查看由系统提供的发现程序所列出的PCI设备
@@ -128,7 +125,7 @@ PCI信息查看
 显示设备详细厂商信息
 
 回显如下
-	
+```
 Slot:	04:00.0
 Class:	Ethernet controller
 Vendor:	Realtek Semiconductor Co., Ltd.
@@ -136,19 +133,19 @@ Device:	RTL8111/8168/8411 PCI Express Gigabit Ethernet Controller
 SVendor:	Realtek Semiconductor Co., Ltd.
 SDevice:	RTL8111/8168/8411 PCI Express Gigabit Ethernet Controller
 Rev:	06
-
+```
 
 	$ lspci -vnn
 显示设备正在使用的驱动模块，以及vendor id ，subdevice id，驱动编写会用到
 
 
-二、PCI 设备驱动卸载
+## 二、PCI 设备驱动卸载
 
 如果pci设备正在被系统所提供的驱动运行，需要手动卸载模块再安装我们所编译好的驱动模块才能使用。
 
 下面是使用pci_hessen的屏显
 
-
+```
 04:00.0 Ethernet controller [0200]: Realtek Semiconductor Co., Ltd. RTL8111/8168/8411 PCI Express Gigabit Ethernet Controller [10ec:8168] (rev 06)
 	Subsystem: Realtek Semiconductor Co., Ltd. RTL8111/8168/8411 PCI Express Gigabit Ethernet Controller [10ec:0123]
 	Flags: bus master, fast devsel, latency 0, IRQ 18
@@ -158,15 +155,18 @@ Rev:	06
 	Capabilities: <access denied>
 	Kernel driver in use: pci_hessen
 	Kernel modules: r8169
+```
 
 
 
 
 
+# PCI驱动框架
 
-PCI驱动框架
-一、基础PCI系统结构体
+下面是驱动的demo代码以及功能简介
 
+## 一、基础PCI系统结构体
+```c
 /* 设备模块信息 */
 static struct pci_driver demo_pci_driver = {
     .name= DEMO_MODULE_NAME,  /* 设备模块名称 */
@@ -174,17 +174,17 @@ static struct pci_driver demo_pci_driver = {
     .probe = demo_probe,      /* 查找并初始化设备 */
     .remove =  demo_remove,   /* 卸载设备模块 */
 /* ... */};
-
+```
 PCI模块最为重要的一个部分
 驱动入口和出口函数，以及能驱动的设备列表
 
 
 
-二、PCI设备注册框架代码
+## 二、PCI设备注册框架代码
 
 
 该空驱动程序可以注册硬件到PCI子系统
-
+```c
 #include <linux/kernel.h> /*Needed by all modules*/
 #include <linux/module.h> /*Needed for KERN_* */
 #include <linux/init.h> /* Needed for the macros */
@@ -264,11 +264,13 @@ module_init(demo_init_module);
 
 /* 卸载驱动程序模块入口*/
 module_exit(demo_cleanup_module);
-
+```
 注：PCI_VENDOR_ID_DEMO， PCI_DEVICE_ID_DEMO 的值可以通过设备资料和lspci命令获得16进制的值
 
-三、Demo_Probe 操作
 
+## 三、Demo_Probe 操作
+
+```c
 static int __init demo_probe(struct pci_dev *pci_dev,const struct pci_device_id *pci_id)                                                                                                                                                 
 {
 /* 驱动发现 */
@@ -291,11 +293,11 @@ static int __init demo_probe(struct pci_dev *pci_dev,const struct pci_device_id 
     printk(KERN_WARNING"THIS IS THE PROBE OVER\n");
      return 0;
  };
-
-四、pci_dev结构体
+```
+## 四、pci_dev结构体
 
 该结构体由内核提供支持，无需显式定义
-
+```c
 struct pci_dev {
     struct list_head bus_list;    /* node in per-bus list对应总线下所有的设备链表 */
     struct pci_bus    *bus;        /* bus this device is on   设备所在的bus*/
@@ -420,11 +422,12 @@ struct pci_dev {
     phys_addr_t rom; /* Physical address of ROM if it's not from the BAR */
     size_t romlen; /* Length of ROM if it's not from the BAR */
 };
-
-五、Demo_Probe 实现
+```
+## 五、Demo_Probe 实现
 
 该部分内容包含了字符设备的注册，在字符设备注册完毕时，系统才会在设备文件夹下产生一个字符设备节点
 
+```c
   static int pci_request_addr(struct pci_dev *pci_dev)
   //设置io
   {
@@ -437,6 +440,8 @@ struct pci_dev {
       return 0;
   
   }
+```
+```c
  static int pci_init_mem(struct pci_dev *pci_dev)
  {//请求内存
      int ret;
@@ -452,6 +457,8 @@ struct pci_dev {
          return 0;
      }
  }
+```
+```c
  static int pci_set_map(struct pci_dev *pci_dev)
  { //io映射
      vir_addr = ioremap(bar0_io_base,bar0_io_length);
@@ -465,8 +472,8 @@ struct pci_dev {
          return 1;
      }
  }
-
-
+```
+```c
 static int set_dma(struct pci_dev *pci_dev)
  {
   //DMA设置
@@ -481,7 +488,8 @@ static int set_dma(struct pci_dev *pci_dev)
      printk("pci_set_dma success\n");
      return 0;
  }
-
+```
+```c
 static int chardev_init(void)
 {//字符设备注册       
      mymajor = register_chrdev(0,CHARDEV_NAME,&demo_fops);
@@ -497,19 +505,22 @@ static int chardev_init(void)
      }
  
 }
+```
 
-字符设备所注册的io读写结构体
+
+```c
  static const struct file_operations demo_fops = {
+ //字符设备所注册的io读写结构体
      .owner = THIS_MODULE,
      .read = demo_read,
      .write = demo_write,
      .open = demo_open,
      .release = demo_release,
  };
+```
+## 六、读写实现
 
-六、读写实现
-
-
+```c
 //读写函数
 static ssize_t demo_read(struct file *filp, char __user *buf,size_t size, loff_t *ppos)
 {
@@ -546,12 +557,12 @@ static ssize_t demo_write(struct file *filp, const char __user *buf,size_t size,
      }
  
 }
+```
 
 
 
-
-七、Demo_remove 操作
-
+## 七、Demo_remove 操作
+```c
  static void __exit demo_remove(struct pci_dev *pci_dev)
  {
  /* 驱动卸载 */
@@ -567,10 +578,11 @@ static ssize_t demo_write(struct file *filp, const char __user *buf,size_t size,
      
      printk(KERN_WARNING"THIS IS THE REMOVE OVER\n");
  };
+```
 
+## 八、Demo_remove 实现
 
-八、Demo_remove 实现
-
+```c
 static int pci_exit_mem(struct pci_dev *pci_dev)
  {
      pci_release_region(pci_dev,0);
@@ -590,3 +602,4 @@ static int chardev_exit()
     printk("chardev_exit exectued\n");
     return 0;
 }
+```
