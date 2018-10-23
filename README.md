@@ -4,9 +4,10 @@ FPGA acceleration demo repo,including PCI drivers, IO controler, user_base progr
 
 
 
-
 PCI驱动框架文档
 V1.0
+
+
 
 Author：杜海鑫
 
@@ -40,11 +41,7 @@ Linux底层代码发展变化很快，此文档作为pci驱动框架，是一个
 
 
 
-Github 仓库地址：https://github.com/dhxsy1994/OperationSys_repo
-
-
-
-
+Github 仓库地址：https://github.com/dhxsy1994/OperationSys_rep
 
 要进行Linux驱动开发我们首先要有Linux内核的源码树，在不同版本的Linux内核所对应的系统接口可能不同。
 PCI子系统作为计算机总线的一部分，有独立的寻址功能，能够去帮我们做很多工作，但PCI子系统的设备仍然需要我们的驱动去启动，PCI子系统用来管理PCI插槽上的设备，向内核请求管理的同时要注册pci和pci设备（字符设备，块设备，网络设备）
@@ -57,6 +54,7 @@ PCI子系统作为计算机总线的一部分，有独立的寻址功能，能�
 
 驱动作为Linux模块可以灵活的安装和卸载，如有需要可以对内核配置其跟随系统启动，或者手动安装和卸载模块，下面是内核模块的代码实现
 
+···C
 #include <linux/kernel.h> /*Needed by all modules*/
 #include <linux/module.h> /*Needed for KERN_* */
 #include <linux/init.h> /* Needed for the macros */
@@ -80,6 +78,7 @@ static void hello_exit(void)
 /* main module function*/进入退出函数，关键
 module_init(hello_init);
 module_exit(hello_exit);
+···
 
 
 
@@ -98,13 +97,14 @@ make -C /lib/modules/$(shell uname -r)/build SUBDIRS=$(PWD) clean      #清理
 
 三、管理内核模块
 
-$ lsmod 
+
+	$ lsmod 
 查看已安装的内核模块
 
-$ rmmod
+	$ rmmod
 卸载模块
 
-$ insmod
+	$ insmod
 安装模块
 
 
@@ -113,7 +113,7 @@ PCI信息查看
 
 一、PCI 设备查看
 
-$ lspci
+	$ lspci
 查看由系统提供的发现程序所列出的PCI设备
 
 回显内容为所有的pci设备，pci桥设备ISA设备等等
@@ -123,10 +123,11 @@ $ lspci
 
 
 
-$ lspci -vmm
+	$ lspci -vmm
 显示设备详细厂商信息
 
 回显如下
+	
 Slot:	04:00.0
 Class:	Ethernet controller
 Vendor:	Realtek Semiconductor Co., Ltd.
@@ -136,7 +137,7 @@ SDevice:	RTL8111/8168/8411 PCI Express Gigabit Ethernet Controller
 Rev:	06
 
 
-$ lspci -vnn
+	$ lspci -vnn
 显示设备正在使用的驱动模块，以及vendor id ，subdevice id，驱动编写会用到
 
 
