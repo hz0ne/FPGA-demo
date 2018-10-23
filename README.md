@@ -54,7 +54,7 @@ PCI子系统作为计算机总线的一部分，有独立的寻址功能，能�
 
 驱动作为Linux模块可以灵活的安装和卸载，如有需要可以对内核配置其跟随系统启动，或者手动安装和卸载模块，下面是内核模块的代码实现
 
-···C
+···
 #include <linux/kernel.h> /*Needed by all modules*/
 #include <linux/module.h> /*Needed for KERN_* */
 #include <linux/init.h> /* Needed for the macros */
@@ -78,13 +78,14 @@ static void hello_exit(void)
 /* main module function*/进入退出函数，关键
 module_init(hello_init);
 module_exit(hello_exit);
-···
+···c
 
 
 
 
 二、Makefile 编译
 
+···c
 obj-m :=MOUDLE.o                           #产生模块的目标文件
                                                                                                                                                                 all:
 make -C /lib/modules/$(shell uname -r)/build SUBDIRS=$(PWD) modules    #编译模块
