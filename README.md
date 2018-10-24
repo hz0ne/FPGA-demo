@@ -29,6 +29,8 @@ Linux底层代码发展变化很快，此文档作为pci驱动框架，是一个
 
 
 内核版本4.15
+实验环境 Ubuntu1804+RT8111 pci网卡
+
 
 Github 仓库地址：https://github.com/dhxsy1994/OperationSys_rep
 
